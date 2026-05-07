@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
-import { Trash2, GripVertical, Plus } from 'lucide-react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
+// Icons replaced with emoji for web compatibility
 import { Colors } from '../theme/colors';
 import { Typography } from '../theme/typography';
 import { usePomodoroStore } from '../store/usePomodoroStore';
@@ -18,29 +17,42 @@ export default function PrioritizerScreen() {
     }
   };
 
-  const renderItem = ({ item, drag, isActive, getIndex }: RenderItemParams<QuickTask>) => {
-    const index = getIndex() ?? 0;
-    
-    return (
-      <ScaleDecorator>
-        <View style={[styles.taskItem, isActive && styles.taskItemActive]}>
-          <TouchableOpacity onLongPress={drag} style={styles.dragHandle}>
-            <GripVertical color={Colors.textSecondary} size={20} />
-          </TouchableOpacity>
-          
-          <View style={styles.rankCircle}>
-            <Text style={styles.rankText}>{index + 1}</Text>
-          </View>
-          
-          <Text style={styles.taskText} numberOfLines={1}>{item.name}</Text>
-          
-          <TouchableOpacity onPress={() => deleteQuickTask(item.id)} style={styles.deleteButton}>
-            <Trash2 color={Colors.error} size={20} />
-          </TouchableOpacity>
-        </View>
-      </ScaleDecorator>
-    );
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const newTasks = [...quickTasks];
+    [newTasks[index - 1], newTasks[index]] = [newTasks[index], newTasks[index - 1]];
+    reorderQuickTasks(newTasks);
   };
+
+  const moveDown = (index: number) => {
+    if (index === quickTasks.length - 1) return;
+    const newTasks = [...quickTasks];
+    [newTasks[index], newTasks[index + 1]] = [newTasks[index + 1], newTasks[index]];
+    reorderQuickTasks(newTasks);
+  };
+
+  const renderItem = ({ item, index }: { item: QuickTask; index: number }) => (
+    <View style={styles.taskItem}>
+      <View style={styles.reorderButtons}>
+        <TouchableOpacity onPress={() => moveUp(index)} style={styles.arrowButton}>
+          <Text style={styles.arrowText}>▲</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => moveDown(index)} style={styles.arrowButton}>
+          <Text style={styles.arrowText}>▼</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <View style={styles.rankCircle}>
+        <Text style={styles.rankText}>{index + 1}</Text>
+      </View>
+      
+      <Text style={styles.taskText} numberOfLines={1}>{item.name}</Text>
+      
+      <TouchableOpacity onPress={() => deleteQuickTask(item.id)} style={styles.deleteButton}>
+        <Text style={{ color: Colors.error, fontSize: 18 }}>🗑️</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -56,13 +68,12 @@ export default function PrioritizerScreen() {
           onSubmitEditing={handleAddTask}
         />
         <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
-          <Plus color="#FFF" size={24} />
+          <Text style={{ color: '#FFF', fontSize: 24, fontWeight: '300' }}>+</Text>
         </TouchableOpacity>
       </View>
 
-      <DraggableFlatList
+      <FlatList
         data={quickTasks}
-        onDragEnd={({ data }) => reorderQuickTasks(data)}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
@@ -120,17 +131,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  taskItemActive: {
-    backgroundColor: Colors.surfaceHighlight,
-    borderColor: Colors.primary,
-    elevation: 8,
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+  reorderButtons: {
+    marginRight: 8,
+    alignItems: 'center',
   },
-  dragHandle: {
-    paddingRight: 12,
+  arrowButton: {
+    padding: 2,
+  },
+  arrowText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
   },
   rankCircle: {
     width: 28,

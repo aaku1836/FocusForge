@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../lib/db';
 import { Task, Priority } from '../types';
 
 interface TaskState {
   tasks: Task[];
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'isCompleted'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   toggleTaskCompletion: (id: string) => void;
@@ -22,7 +22,7 @@ export const useTaskStore = create<TaskState>()(
     (set) => ({
       tasks: [],
       lastUsedPriority: 'MEDIUM',
-      lastUsedColor: '#7C3AED', // default primary accent
+      lastUsedColor: '#7C3AED',
 
       addTask: (taskData) =>
         set((state) => ({
@@ -32,7 +32,7 @@ export const useTaskStore = create<TaskState>()(
               ...taskData,
               id: generateId(),
               createdAt: new Date().toISOString(),
-              isCompleted: false,
+              completed: false,
             },
           ],
         })),
@@ -53,11 +53,11 @@ export const useTaskStore = create<TaskState>()(
         set((state) => ({
           tasks: state.tasks.map((task) => {
             if (task.id === id) {
-              const isCompleted = !task.isCompleted;
+              const completed = !task.completed;
               return {
                 ...task,
-                isCompleted,
-                completedAt: isCompleted ? new Date().toISOString() : undefined,
+                completed,
+                completedAt: completed ? new Date().toISOString() : undefined,
               };
             }
             return task;
@@ -69,7 +69,11 @@ export const useTaskStore = create<TaskState>()(
     }),
     {
       name: 'focus-forge-tasks',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => ({
+        getItem: (name) => db.get(name),
+        setItem: (name, value) => db.set(name, value),
+        removeItem: (name) => db.remove(name),
+      })),
     }
   )
 );

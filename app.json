@@ -17,11 +17,19 @@
     },
     "android": {
       "adaptiveIcon": {
+        "_graph": "Adaptive Icon Target Grid",
+        "_connects": [
+          "Light App Icon Target Grid",
+          "Splash Icon Target Grid",
+          "Light App Icon Target Grid",
+          "Splash Icon Target Grid"
+        ],
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.FocusForge"
     },
     "web": {
       "favicon": "./assets/favicon.png"

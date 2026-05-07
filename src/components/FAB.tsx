@@ -1,6 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import { Plus } from 'lucide-react-native';
+import { TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Colors, Shadows } from '../theme/colors';
 
 interface FABProps {
@@ -14,7 +13,7 @@ export default function FAB({ onPress }: FABProps) {
       activeOpacity={0.8}
       onPress={onPress}
     >
-      <Plus size={32} color="#FFFFFF" />
+      <Text style={styles.plusText}>+</Text>
     </TouchableOpacity>
   );
 }
@@ -31,11 +30,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...Shadows.medium,
-    // Add a glowing effect using shadow
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
     shadowRadius: 12,
     elevation: 8,
+  },
+  plusText: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: '300',
+    lineHeight: 34,
   },
 });

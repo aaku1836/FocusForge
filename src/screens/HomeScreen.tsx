@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, Text } from 'react-native';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Colors } from '../theme/colors';
 import { Typography } from '../theme/typography';
 import { useTaskStore } from '../store/useTaskStore';
@@ -11,16 +10,16 @@ import CreateEditTaskSheet from '../components/CreateEditTaskSheet';
 
 export default function HomeScreen() {
   const { tasks, toggleTaskCompletion } = useTaskStore();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const sheetRef = useRef<any>(null);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
   // Filter tasks
-  const activeTasks = tasks.filter(t => !t.isCompleted).sort((a, b) => {
+  const activeTasks = tasks.filter(t => !t.completed).sort((a, b) => {
     const priorityWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
     return priorityWeight[b.priority] - priorityWeight[a.priority];
   });
   
-  const completedTasks = tasks.filter(t => t.isCompleted);
+  const completedTasks = tasks.filter(t => t.completed);
 
   const handleOpenSheet = (task?: Task) => {
     setTaskToEdit(task || null);

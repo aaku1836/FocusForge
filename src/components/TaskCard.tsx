@@ -1,14 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated';
-import { Check } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+// Icons replaced with text for web compatibility
 import { Task } from '../types';
 import { Colors } from '../theme/colors';
 import { Typography } from '../theme/typography';
@@ -20,51 +12,7 @@ interface TaskCardProps {
   onPress?: (task: Task) => void;
 }
 
-const SWIPE_THRESHOLD = 80;
-
 export default function TaskCard({ task, onComplete, onLongPress, onPress }: TaskCardProps) {
-  const translateX = useSharedValue(0);
-  const itemHeight = useSharedValue(80); // Approximate default height
-  const opacity = useSharedValue(1);
-
-  const completeTask = () => {
-    onComplete(task.id);
-  };
-
-  const pan = Gesture.Pan()
-    .onChange((event) => {
-      // Only allow swipe right
-      if (event.translationX > 0) {
-        translateX.value = event.translationX;
-      }
-    })
-    .onEnd((event) => {
-      if (event.translationX > SWIPE_THRESHOLD) {
-        translateX.value = withTiming(400, { duration: 250 }, () => {
-          opacity.value = withTiming(0, { duration: 150 });
-          itemHeight.value = withTiming(0, { duration: 200 }, () => {
-            runOnJS(completeTask)();
-          });
-        });
-      } else {
-        translateX.value = withSpring(0);
-      }
-    });
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
-
-  const containerStyle = useAnimatedStyle(() => {
-    return {
-      height: itemHeight.value,
-      opacity: opacity.value,
-      marginBottom: itemHeight.value > 0 ? 12 : 0,
-    };
-  });
-
   const renderPriorityBadge = () => {
     let color = Colors.priorityLow;
     if (task.priority === 'HIGH') color = Colors.priorityHigh;
@@ -78,55 +26,46 @@ export default function TaskCard({ task, onComplete, onLongPress, onPress }: Tas
   };
 
   return (
-    <Animated.View style={containerStyle}>
-      <View style={styles.backgroundContainer}>
-        <Check size={28} color={Colors.success} />
-      </View>
-      <GestureDetector gesture={pan}>
-        <Animated.View style={[styles.card, animatedStyle]}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            delayLongPress={300}
-            onLongPress={() => onLongPress(task)}
-            onPress={() => onPress && onPress(task)}
-            style={styles.innerCard}
-          >
-            {/* Color Accent Edge */}
-            <View style={[styles.colorEdge, { backgroundColor: task.color || Colors.primary }]} />
-            
-            <View style={styles.content}>
-              <View style={styles.row}>
-                <Text style={styles.taskName} numberOfLines={1}>
-                  {task.name}
-                </Text>
-                {renderPriorityBadge()}
-              </View>
-              
-              {(task.description || task.scheduledTime) && (
-                <View style={styles.detailsRow}>
-                  {task.scheduledTime && (
-                    <Text style={styles.timeText}>
-                      {new Date(task.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  )}
-                </View>
-              )}
+    <View style={styles.wrapper}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        delayLongPress={300}
+        onLongPress={() => onLongPress(task)}
+        onPress={() => onPress && onPress(task)}
+        style={styles.card}
+      >
+        {/* Color Accent Edge */}
+        <View style={[styles.colorEdge, { backgroundColor: task.color || Colors.primary }]} />
+        
+        <View style={styles.content}>
+          <View style={styles.row}>
+            <Text style={[styles.taskName, task.completed && styles.completedText]} numberOfLines={1}>
+              {task.title}
+            </Text>
+            {renderPriorityBadge()}
+          </View>
+          
+          {(task.description) && (
+            <View style={styles.detailsRow}>
+              <Text style={styles.timeText}>
+                {task.description}
+              </Text>
             </View>
-          </TouchableOpacity>
-        </Animated.View>
-      </GestureDetector>
-    </Animated.View>
+          )}
+        </View>
+
+        {/* Complete button */}
+        <TouchableOpacity style={styles.completeButton} onPress={() => onComplete(task.id)}>
+          <Text style={{ fontSize: 20 }}>{task.completed ? '✅' : '⬜'}</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.surfaceHighlight, // or a green complete bg
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 24,
+  wrapper: {
+    marginBottom: 12,
   },
   card: {
     backgroundColor: Colors.surface,
@@ -137,11 +76,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  innerCard: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    minHeight: 80,
+    minHeight: 72,
   },
   colorEdge: {
     width: 6,
@@ -161,6 +98,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
   },
+  completedText: {
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
+  },
   priorityBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -178,5 +119,10 @@ const styles = StyleSheet.create({
   timeText: {
     ...Typography.bodySmall,
     color: Colors.textSecondary,
+  },
+  completeButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
 });

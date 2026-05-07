@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
-import { Play, Pause, RotateCcw, SkipForward, Settings as SettingsIcon } from 'lucide-react-native';
 import { Colors } from '../theme/colors';
 import { Typography } from '../theme/typography';
 import { usePomodoroStore } from '../store/usePomodoroStore';
@@ -78,13 +76,9 @@ export default function PomodoroScreen() {
     setIsActive(!isActive);
   };
 
-  // SVG dimensions
-  const size = 280;
-  const strokeWidth = 12;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
+  // Progress ring via CSS-like approach
   const progress = timeLeft / totalTime.current;
-  const strokeDashoffset = circumference - progress * circumference;
+  const ringColor = sessionType === 'Work Session' ? Colors.priorityHigh : Colors.priorityLow;
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -93,40 +87,21 @@ export default function PomodoroScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={{ width: 24 }} />
-        <Text style={Typography.h2}>Timer</Text>
-        <TouchableOpacity>
-          <SettingsIcon color={Colors.textSecondary} size={24} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Timer</Text>
+        <Text style={{ fontSize: 20 }}>⚙️</Text>
       </View>
 
       <View style={styles.timerContainer}>
-        <Svg width={size} height={size} style={styles.svgWrapper}>
-          <Circle
-            stroke={Colors.surfaceHighlight}
-            fill="none"
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            strokeWidth={strokeWidth}
-          />
-          <Circle
-            stroke={sessionType === 'Work Session' ? Colors.priorityHigh : Colors.priorityLow}
-            fill="none"
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${circumference} ${circumference}`}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
-        </Svg>
-        <View style={styles.timeTextContainer}>
-          <Text style={styles.timeText}>
-            {`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`}
-          </Text>
-          <Text style={styles.sessionLabel}>{sessionType}</Text>
+        {/* Outer ring background */}
+        <View style={[styles.ringOuter, { borderColor: Colors.surfaceHighlight }]}>
+          {/* Progress indicator - simplified for web */}
+          <View style={[styles.ringInner, { borderColor: ringColor, borderTopColor: progress > 0.75 ? ringColor : 'transparent', borderRightColor: progress > 0.5 ? ringColor : 'transparent', borderBottomColor: progress > 0.25 ? ringColor : 'transparent' }]} />
+          <View style={styles.timeContent}>
+            <Text style={styles.timeText}>
+              {`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`}
+            </Text>
+            <Text style={styles.sessionLabel}>{sessionType}</Text>
+          </View>
         </View>
       </View>
 
@@ -144,19 +119,15 @@ export default function PomodoroScreen() {
 
       <View style={styles.controls}>
         <TouchableOpacity style={styles.iconButton} onPress={resetTimer}>
-          <RotateCcw size={28} color={Colors.textSecondary} />
+          <Text style={styles.controlEmoji}>🔄</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.mainButton} onPress={toggleTimer}>
-          {isActive ? (
-            <Pause size={32} color="#FFF" fill="#FFF" />
-          ) : (
-            <Play size={32} color="#FFF" fill="#FFF" style={{ marginLeft: 4 }} />
-          )}
+          <Text style={styles.playPauseText}>{isActive ? '⏸' : '▶'}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.iconButton} onPress={handleCompleteSession}>
-          <SkipForward size={28} color={Colors.textSecondary} />
+          <Text style={styles.controlEmoji}>⏭</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -175,15 +146,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
+  headerTitle: {
+    ...Typography.h2,
+  },
   timerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     height: 300,
   },
-  svgWrapper: {
-    position: 'absolute',
+  ringOuter: {
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    borderWidth: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  timeTextContainer: {
+  ringInner: {
+    position: 'absolute',
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    borderWidth: 12,
+  },
+  timeContent: {
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -228,6 +214,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  controlEmoji: {
+    fontSize: 24,
+  },
   mainButton: {
     width: 80,
     height: 80,
@@ -240,5 +229,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,
+  },
+  playPauseText: {
+    fontSize: 32,
+    color: '#FFF',
   },
 });

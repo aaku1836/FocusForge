@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../lib/db';
 import { QuickTask, PomodoroSettings } from '../types';
 
 interface PomodoroQuickTaskState {
@@ -48,8 +48,12 @@ export const usePomodoroStore = create<PomodoroQuickTaskState>()(
         })),
     }),
     {
-      name: 'focus-forge-pomodoro-quick',
-      storage: createJSONStorage(() => AsyncStorage),
+      name: 'focus-forge-pomodoro',
+      storage: createJSONStorage(() => ({
+        getItem: (name) => db.get(name),
+        setItem: (name, value) => db.set(name, value),
+        removeItem: (name) => db.remove(name),
+      })),
     }
   )
 );

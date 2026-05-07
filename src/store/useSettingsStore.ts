@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../lib/db';
 
 export type AppTheme = 'light' | 'dark' | 'system';
 
@@ -38,7 +38,11 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'focus-forge-settings',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => ({
+        getItem: (name) => db.get(name),
+        setItem: (name, value) => db.set(name, value),
+        removeItem: (name) => db.remove(name),
+      })),
     }
   )
 );
